@@ -1,16 +1,42 @@
-name: Docker Image CI
+name: Build and Push Docker Image
 
+# Kapan action ini dijalankan?
 on:
   push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
+    branches:
+      - main  # Jalan setiap kali ada push ke branch 'main'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-push:
+    runs-on: ubuntu-latest  # Gunakan komputer virtual Ubuntu
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Build the Docker image
-        run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      # 1. Check out kode kita dari repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Login ke DockerHub menggunakan Secrets yang kita buat tadi
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 3. Setup Docker Buildx (Tools canggih untuk build docker)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 4. Build image dan Push ke DockerHub
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          # Format nama: username/nama-image:tag
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/belajar-cicd:latest
+          
+      - name: Build and push
+            uses: docker/build-push-action@v5
+            with:
+              context: .
+              push: true
